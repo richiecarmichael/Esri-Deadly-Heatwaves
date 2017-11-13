@@ -73,7 +73,9 @@ function (
         // URL and other contants
         var EVENTS   = 'https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/events/FeatureServer/0';
         var MODEL    = 'https://maps.esri.com/apl1/rest/services/HeatWave/LHWByTempVsRH/ImageServer';
-        var HUMIDITY = 'https://maps.esri.com/apl22/rest/services/Heatwaves/NetCDFReturnValues/GPServer/NetCDFReturnValues';
+        //var HUMIDITY = 'https://maps.esri.com/apl22/rest/services/Heatwaves/NetCDFReturnValues/GPServer/NetCDFReturnValues';
+        //var HUMIDITY = 'https://maps.esri.com/apl22/rest/services/Heatwaves/NetCDFReturnValues2/GPServer/NetCDFReturnValues2';
+        var HUMIDITY = 'https://maps.esri.com/apl22/rest/services/Heatwaves/NetCDFReturnValues5/GPServer/NetCDFReturnValues5';
         var DATE_MIN = 1950;
         var DATE_MAX = 2100;
 
@@ -558,10 +560,14 @@ function (
 
             // GP parameters
             var parameters = {
-                Year: year,
-                Experiment: exp,
-                Latitude: lat,
-                Longitude: lon
+                //Year: year,
+                //Experiment: exp,
+                //Latitude: lat,
+                //Longitude: lon
+                year: year,
+                exp: exp,
+                inlat: lat,
+                inlon: lon
             };
 
             // Initialize GP
@@ -573,8 +579,10 @@ function (
                 if (e.jobStatus !== 'esriJobSucceeded') { return; }
 
                 all([
-                    gp.getResultData(e.jobId, 'RHS'),
-                    gp.getResultData(e.jobId, 'TAS')
+                    //gp.getResultData(e.jobId, 'RHS'),
+                    //gp.getResultData(e.jobId, 'TAS')
+                    gp.getResultData(e.jobId, 'outrhs'),
+                    gp.getResultData(e.jobId, 'outtas')
                 ]).then(function (results) {
                     // results will be an Array
                     var rhs = results[0].value.features;
@@ -584,7 +592,7 @@ function (
                     var maxTemp = 50;
                     for (var i = 0; i < rhs.length; i++) {
                         var r = rhs[i].attributes.rhs;
-                        var t = tas[i].attributes.tas - 273;
+                        var t = tas[i].attributes.tas;
                         data.push({
                             rhs: r,
                             tas: t
@@ -672,7 +680,7 @@ function (
                         .append('text')
                         .style('text-anchor', 'middle')
                         .text('Humidity of each day in ' + year);
-                    yaxisLabel, no 
+                    yaxisLabel
                         .append('text')
                         .attr('dy', 15)
                         .style('text-anchor', 'middle')
