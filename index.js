@@ -74,6 +74,7 @@ function (
         var EVENTS   = 'https://services.arcgis.com/6DIQcwlPy8knb6sg/arcgis/rest/services/events/FeatureServer/0';
         var MODEL    = 'https://maps.esri.com/apl1/rest/services/HeatWave/LHWByTempVsRH/ImageServer';
         var HUMIDITY = 'https://maps.esri.com/apl22/rest/services/Heatwaves/NetCDFReturnValues/GPServer/NetCDFReturnValues';
+        var DIOCESES = 'https://services3.arcgis.com/I88u8wDux7Kis2GZ/arcgis/rest/services/CatholicHierarchyDiocese/FeatureServer/0';
         var DATE_MIN = 1950;
         var DATE_MAX = 2100;
 
@@ -180,6 +181,28 @@ function (
         _timeSlider.setLabels(['1950', '2000', '2050', '2100']);
         _timeSlider.startup();
 
+        // Dioceses Overlay
+        var _dioceses = new FeatureLayer(DIOCESES, {
+            outFields: [
+                'DioceseName',      // "Bubanza"
+                'BishopFirstName',  // "Jean"
+                'BishopLastName'    // "Ntagwarara"
+            ],
+            showAttribution: false,
+            useMapTime: false,
+            visible: true
+        });
+        _dioceses.setRenderer(new SimpleRenderer(new SimpleLineSymbol(
+            SimpleLineSymbol.STYLE_SOLID,
+            new Color([100, 100, 100]),
+            0.5
+        )));
+        _dioceses.setSelectionSymbol(new SimpleLineSymbol(
+            SimpleLineSymbol.STYLE_SOLID,
+            new Color([0, 255, 255]),
+            2
+        ));
+
         // Create map and add basemap
         var _map = new Map('map', {
             basemap: 'gray',
@@ -189,6 +212,7 @@ function (
             extent: MAPEXTENT
         });
         _map.addLayers([
+            _dioceses,
             _events,
             _model
         ]);
@@ -220,16 +244,30 @@ function (
                     model = 'RCP85 (business-as-usual)';
                     break;
             }
-            $('#modalChart .modal-title').html(
-                $.format('{0} at {1}&deg;{2} {3}&deg;{4} using {5}', [
-                    'Heatwaves',
-                    Math.abs(wgs.y.toFixed()),
-                    (wgs.y > 0) ? 'N' : 'S',
-                    Math.abs(wgs.x.toFixed()),
-                    (wgs.x > 0) ? 'E' : 'W',
-                    model
-                ])
-            );
+            //$('#modalChart .modal-title').html(
+            //    $.format('{0} at {1}&deg;{2} {3}&deg;{4} using {5}', [
+            //        'Heatwaves',
+            //        Math.abs(wgs.y.toFixed()),
+            //        (wgs.y > 0) ? 'N' : 'S',
+            //        Math.abs(wgs.x.toFixed()),
+            //        (wgs.x > 0) ? 'E' : 'W',
+            //        model
+            //    ])
+            //);
+
+            // Show diocese name in title
+            $('#modalChart .modal-title').empty();
+            var query = new Query();
+            query.geometry = mappoint;
+            _dioceses.selectFeatures(query, FeatureLayer.SELECTION_NEW, function (f) {
+                var graphic = f[0];
+                $('#modalChart .modal-title').html(
+                    $.format('Diocese - {0} (Bishop - {1} {2})', [
+                        graphic.attributes.DioceseName,
+                        graphic.attributes.BishopFirstName,
+                        graphic.attributes.BishopLastName
+                    ]));
+            });
             
             // Initialize charts
             chart1(wgs);
